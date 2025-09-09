@@ -1,4 +1,6 @@
-import { signOut } from "@/lib/auth"
+"use client"
+
+import { signOut } from "next-auth/react"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
@@ -57,18 +59,12 @@ export function DashboardHeader({ user }: DashboardHeaderProps) {
                   </div>
                 </div>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <form
-                    action={async () => {
-                      "use server"
-                      await signOut({ redirectTo: "/" })
-                    }}
-                  >
-                    <button type="submit" className="flex w-full items-center">
-                      <LogOut className="mr-2 h-4 w-4" />
-                      <span>登出</span>
-                    </button>
-                  </form>
+                <DropdownMenuItem 
+                  onClick={() => signOut({ callbackUrl: "/" })}
+                  className="cursor-pointer"
+                >
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>登出</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
