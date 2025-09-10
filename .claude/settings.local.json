@@ -19,7 +19,14 @@
       "Bash(./start.sh:*)",
       "Bash(docker:*)",
       "Bash(sudo service:*)",
-      "Bash(systemctl start:*)"
+      "Bash(systemctl start:*)",
+      "Read(//proc/1/**)",
+      "Bash(service docker:*)",
+      "Read(//tmp/**)",
+      "Read(//usr/**)",
+      "Bash(sh:*)",
+      "Bash(apt-get:*)",
+      "Bash(apt-get install:*)"
     ],
     "deny": [],
     "ask": []
