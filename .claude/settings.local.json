@@ -12,7 +12,10 @@
       "Bash(curl:*)",
       "Bash(npm run build:*)",
       "Bash(pkill:*)",
-      "Bash(npm run lint:*)"
+      "Bash(npm run lint:*)",
+      "Bash(npx @modelcontextprotocol/create-server:*)",
+      "Bash(npm search:*)",
+      "Bash(chmod:*)"
     ],
     "deny": [],
     "ask": []

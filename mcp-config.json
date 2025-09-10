@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "postgres": {
+      "command": "npx",
+      "args": ["enhanced-postgres-mcp-server"],
+      "env": {
+        "DATABASE_URL": "postgresql://promptuser:promptpass123@localhost:5432/promptdb"
+      }
+    },
+    "filesystem": {
+      "command": "npx",
+      "args": ["@modelcontextprotocol/server-filesystem", "/workspace"]
+    }
+  }
+}
