@@ -15,7 +15,11 @@
       "Bash(npm run lint:*)",
       "Bash(npx @modelcontextprotocol/create-server:*)",
       "Bash(npm search:*)",
-      "Bash(chmod:*)"
+      "Bash(chmod:*)",
+      "Bash(./start.sh:*)",
+      "Bash(docker:*)",
+      "Bash(sudo service:*)",
+      "Bash(systemctl start:*)"
     ],
     "deny": [],
     "ask": []
