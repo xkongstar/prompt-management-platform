@@ -1,0 +1,206 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Enums
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum ProjectVisibility {
+  PRIVATE
+  PUBLIC
+  TEAM
+}
+
+enum PromptStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum CollaboratorRole {
+  VIEWER
+  EDITOR
+  ADMIN
+}
+
+// User model
+model User {
+  id            String   @id @default(uuid())
+  email         String   @unique
+  passwordHash  String   @map("password_hash")
+  name          String
+  avatarUrl     String?  @map("avatar_url")
+  role          UserRole @default(USER)
+  emailVerified Boolean  @default(false) @map("email_verified")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  ownedProjects    Project[]              @relation("ProjectOwner")
+  authoredPrompts  Prompt[]               @relation("PromptAuthor")
+  authoredVersions PromptVersion[]        @relation("VersionAuthor")
+  collaborations   ProjectCollaborator[]  @relation("Collaborator")
+  invitations      ProjectCollaborator[]  @relation("Inviter")
+  favorites        UserFavorite[]
+
+  @@map("users")
+}
+
+// Project model
+model Project {
+  id          String            @id @default(uuid())
+  name        String
+  description String?
+  ownerId     String            @map("owner_id")
+  visibility  ProjectVisibility @default(PRIVATE)
+  settings    Json              @default("{}")
+  createdAt   DateTime          @default(now()) @map("created_at")
+  updatedAt   DateTime          @updatedAt @map("updated_at")
+
+  // Relations
+  owner         User                  @relation("ProjectOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  prompts       Prompt[]
+  tags          Tag[]
+  collaborators ProjectCollaborator[]
+
+  @@map("projects")
+}
+
+// Prompt model
+model Prompt {
+  id        String       @id @default(uuid())
+  title     String
+  content   String
+  projectId String       @map("project_id")
+  authorId  String       @map("author_id")
+  status    PromptStatus @default(DRAFT)
+  version   Int          @default(1)
+  metadata  Json         @default("{}")
+  createdAt DateTime     @default(now()) @map("created_at")
+  updatedAt DateTime     @updatedAt @map("updated_at")
+
+  // Relations
+  project   Project         @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  author    User            @relation("PromptAuthor", fields: [authorId], references: [id], onDelete: SetNull)
+  versions  PromptVersion[]
+  tags      PromptTag[]
+  favorites UserFavorite[]
+
+  @@map("prompts")
+}
+
+// Prompt version model
+model PromptVersion {
+  id        String   @id @default(uuid())
+  promptId  String   @map("prompt_id")
+  version   Int
+  title     String
+  content   String
+  changeLog String?  @map("change_log")
+  authorId  String   @map("author_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relations
+  prompt Prompt @relation(fields: [promptId], references: [id], onDelete: Cascade)
+  author User   @relation("VersionAuthor", fields: [authorId], references: [id], onDelete: SetNull)
+
+  @@unique([promptId, version])
+  @@map("prompt_versions")
+}
+
+// Tag model
+model Tag {
+  id        String   @id @default(uuid())
+  name      String
+  color     String   @default("#1890ff")
+  projectId String   @map("project_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relations
+  project Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  prompts PromptTag[]
+
+  @@unique([name, projectId])
+  @@map("tags")
+}
+
+// Prompt-Tag junction table
+model PromptTag {
+  promptId String @map("prompt_id")
+  tagId    String @map("tag_id")
+
+  // Relations
+  prompt Prompt @relation(fields: [promptId], references: [id], onDelete: Cascade)
+  tag    Tag    @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([promptId, tagId])
+  @@map("prompt_tags")
+}
+
+// Project collaborator model
+model ProjectCollaborator {
+  id          String           @id @default(uuid())
+  projectId   String           @map("project_id")
+  userId      String           @map("user_id")
+  role        CollaboratorRole @default(VIEWER)
+  permissions Json             @default("{}")
+  invitedBy   String           @map("invited_by")
+  joinedAt    DateTime         @default(now()) @map("joined_at")
+
+  // Relations
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user    User    @relation("Collaborator", fields: [userId], references: [id], onDelete: Cascade)
+  inviter User    @relation("Inviter", fields: [invitedBy], references: [id], onDelete: SetNull)
+
+  @@unique([projectId, userId])
+  @@map("project_collaborators")
+}
+
+// User favorites model
+model UserFavorite {
+  userId   String @map("user_id")
+  promptId String @map("prompt_id")
+  addedAt  DateTime @default(now()) @map("added_at")
+
+  // Relations
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  prompt Prompt @relation(fields: [promptId], references: [id], onDelete: Cascade)
+
+  @@id([userId, promptId])
+  @@map("user_favorites")
+}
+
+// Indexes for better performance
+// User indexes
+// @@index([email]) - already unique
+// @@index([role])
+
+// Project indexes
+// @@index([ownerId]) - already has foreign key index
+// @@index([visibility])
+// @@index([createdAt])
+
+// Prompt indexes
+// @@index([projectId]) - already has foreign key index
+// @@index([authorId]) - already has foreign key index
+// @@index([status])
+// @@index([createdAt])
+// @@index([updatedAt])
+
+// Tag indexes
+// @@index([projectId]) - already has foreign key index
+// @@index([name])
+
+// Full-text search indexes (PostgreSQL specific)
+// These would be added via raw SQL in migrations
